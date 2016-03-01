@@ -216,14 +216,12 @@ public abstract class ServerCnxnFactory {
         // we throw an exception otherwise we continue without authentication.
         if (entries == null) {
             String jaasFile = System.getProperty(Environment.JAAS_CONF_KEY);
-            String loginContextName = System.getProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY);
-            if (securityException != null && (loginContextName != null || jaasFile != null)) {
-                String errorMessage = "No JAAS configuration section named '" + serverSection +  "' was found";
-                if (jaasFile != null) {
-                    errorMessage += "in '" + jaasFile + "'.";
-                }
-                if (loginContextName != null) {
-                    errorMessage += " But " + ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY + " was set.";
+            String errorMessage = securityException.getMessage();
+            if (securityException != null) {
+                if (jaasFile != null && securityException.getCause().getClass().getName().compareTo("java.io.IOException") == 0)
+                    errorMessage = errorMessage+"\n Error parsing the configuration section named "+ serverSection;
+                else if (jaasFile != null) {
+                    errorMessage = errorMessage+"\n No JAAS configuration section named '" + serverSection +  "' was found in '"+jaasFile+"'.";
                 }
                 LOG.error(errorMessage);
                 throw new IOException(errorMessage);
