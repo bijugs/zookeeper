@@ -98,13 +98,37 @@ initialize() {
     # script for the files contained by the parent. note also by using
     # -p the parent(s) will be created if it doesn't already exist
     rm -rf "$ZOO_DATADIR/myid" 2>/dev/null >/dev/null
+    if [ $? -ne 0 ]; then
+        echo "ZooKeeper DataDir file $ZOO_DATADIR/myid could not be removed"
+        exit 1
+    fi
     rm -rf "$ZOO_DATADIR/version-2" 2>/dev/null >/dev/null
+    if [ $? -ne 0 ]; then
+        echo "ZooKeeper DataDir $ZOO_DATADIR/version-2 could not be removed"
+        exit 1
+    fi
     mkdir -p "$ZOO_DATADIR/version-2"
+    if [ $? -ne 0 ]; then
+        echo "ZooKeeper DataDir $ZOO_DATADIR/version-2 could not be created"
+        exit 1
+    fi
 
     if [ -n "$ZOO_DATALOGDIR" ]; then
         rm -rf "$ZOO_DATALOGDIR/myid" 2>/dev/null >/dev/null
+        if [ $? -ne 0 ]; then
+          echo "ZooKeeper DataLogDir file $ZOO_DATALOGDIR/myid could not be removed"
+          exit 1
+        fi
         rm -rf "$ZOO_DATALOGDIR/version-2" 2>/dev/null >/dev/null
+        if [ $? -ne 0 ]; then
+          echo "ZooKeeper DataLogDir $ZOO_DATALOGDIR/version-2 could not be removed"
+          exit 1
+        fi
         mkdir -p "$ZOO_DATALOGDIR/version-2"
+        if [ $? -ne 0 ]; then
+          echo "ZooKeeper DataLogDir $ZOO_DATALOGDIR/version-2 could not be created"
+          exit 1
+        fi
     fi
 
     if [ $MYID ]; then
