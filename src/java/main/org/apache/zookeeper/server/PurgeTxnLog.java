@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.persistence.Util;
+import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 
 /**
  * this class is used to clean up the 
@@ -69,7 +70,7 @@ public class PurgeTxnLog {
             throw new IllegalArgumentException(COUNT_ERR_MSG);
         }
 
-        FileTxnSnapLog txnLog = new FileTxnSnapLog(dataDir, snapDir);
+        FileTxnSnapLog txnLog = new FileTxnSnapLog(dataDir, snapDir, new QuorumPeerConfig());
 
         List<File> snaps = txnLog.findNRecentSnapshots(num);
         retainNRecentSnapshots(txnLog, snaps);

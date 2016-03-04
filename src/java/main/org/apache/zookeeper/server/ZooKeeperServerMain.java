@@ -117,7 +117,7 @@ public class ZooKeeperServerMain {
             // so rather than spawning another thread, we will just call
             // run() in this thread.
             // create a file logger url from the command line args
-            txnLog = new FileTxnSnapLog(config.dataLogDir, config.dataDir);
+            txnLog = new FileTxnSnapLog(config.dataLogDir, config.dataDir, config);
             ZooKeeperServer zkServer = new ZooKeeperServer( txnLog,
                     config.tickTime, config.minSessionTimeout, config.maxSessionTimeout, null);
 

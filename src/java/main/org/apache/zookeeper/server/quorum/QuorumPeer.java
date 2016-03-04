@@ -730,7 +730,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         this.initLimit = initLimit;
         this.syncLimit = syncLimit;
         this.quorumListenOnAllIPs = quorumListenOnAllIPs;
-        this.logFactory = new FileTxnSnapLog(dataLogDir, dataDir);
+        QuorumPeerConfig config = new QuorumPeerConfig();
+        this.logFactory = new FileTxnSnapLog(dataLogDir, dataDir, config);
         this.zkDb = new ZKDatabase(this.logFactory);
         if(quorumConfig == null) quorumConfig = new QuorumMaj(quorumPeers);
         setQuorumVerifier(quorumConfig, false);

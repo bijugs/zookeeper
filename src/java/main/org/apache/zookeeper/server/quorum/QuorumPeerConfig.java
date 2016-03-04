@@ -45,6 +45,7 @@ import org.apache.zookeeper.common.AtomicFileWritingIdiom.OutputStreamStatement;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom.WriterStatement;
 import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.ZooKeeperConfig;
 import org.apache.zookeeper.server.quorum.QuorumPeer.LearnerType;
 import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
 import org.apache.zookeeper.server.quorum.flexible.QuorumHierarchical;
@@ -53,7 +54,7 @@ import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 import org.apache.zookeeper.server.util.VerifyingFileFactory;
 
 
-public class QuorumPeerConfig {
+public class QuorumPeerConfig implements ZooKeeperConfig {
     private static final Logger LOG = LoggerFactory.getLogger(QuorumPeerConfig.class);
     private static final int UNSET_SERVERID = -1;
     public static final String nextDynamicConfigFileSuffix = ".dynamic.next";
@@ -87,6 +88,7 @@ public class QuorumPeerConfig {
     protected int snapRetainCount = 3;
     protected int purgeInterval = 0;
     protected boolean syncEnabled = true;
+    protected long fsyncWarningThresholdMS = 1000;
 
     protected LearnerType peerType = LearnerType.PARTICIPANT;
 
@@ -223,7 +225,9 @@ public class QuorumPeerConfig {
         for (Entry<Object, Object> entry : zkProp.entrySet()) {
             String key = entry.getKey().toString().trim();
             String value = entry.getValue().toString().trim();
-            if (key.equals("dataDir")) {
+            if (key.equals("fsync.warningthresholdms")) {
+            	fsyncWarningThresholdMS = Long.parseLong(value);
+            } else if (key.equals("dataDir")) {
                 dataDir = vff.create(value);
             } else if (key.equals("dataLogDir")) {
                 dataLogDir = vff.create(value);
@@ -685,6 +689,8 @@ public class QuorumPeerConfig {
     }
 
     public long getServerId() { return serverId; }
+    
+    public long getFsyncWarningThreshold() { return fsyncWarningThresholdMS; }
 
     public boolean isDistributed() {
         return quorumVerifier!=null && (!standaloneEnabled || quorumVerifier.getVotingMembers().size() > 1);

@@ -42,6 +42,7 @@ import org.apache.jute.OutputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.server.persistence.TxnLog.TxnIterator;
 import org.apache.zookeeper.server.util.SerializeUtils;
+import org.apache.zookeeper.server.ZooKeeperConfig;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +100,7 @@ public class FileTxnLog implements TxnLog {
     public final static int VERSION = 2;
 
     /** Maximum time we allow for elapsed fsync before WARNing */
-    private final static long fsyncWarningThresholdMS;
+    private static long fsyncWarningThresholdMS;
 
     static {
         LOG = LoggerFactory.getLogger(FileTxnLog.class);
@@ -112,7 +113,6 @@ public class FileTxnLog implements TxnLog {
                 LOG.warn(size + " is not a valid value for preAllocSize");
             }
         }
-        fsyncWarningThresholdMS = Long.getLong("fsync.warningthresholdms", 1000);
     }
 
     long lastZxidSeen;
@@ -121,6 +121,8 @@ public class FileTxnLog implements TxnLog {
     volatile FileOutputStream fos = null;
 
     File logDir;
+    ZooKeeperConfig config;
+    
     private final boolean forceSync = !System.getProperty("zookeeper.forceSync", "yes").equals("no");;
     long dbId;
     private LinkedList<FileOutputStream> streamsToFlush =
@@ -133,8 +135,11 @@ public class FileTxnLog implements TxnLog {
      * where the txnlogs are stored
      * @param logDir the directory where the txnlogs are stored
      */
-    public FileTxnLog(File logDir) {
+    public FileTxnLog(File logDir, ZooKeeperConfig config) {
+    	this.config = config;
         this.logDir = logDir;
+        fsyncWarningThresholdMS = config.getFsyncWarningThreshold();
+        fsyncWarningThresholdMS = Long.getLong("zookeeper.fsync.warningthresholdms", fsyncWarningThresholdMS);
     }
 
     /**
@@ -288,7 +293,7 @@ public class FileTxnLog implements TxnLog {
         long zxid = maxLog;
         TxnIterator itr = null;
         try {
-            FileTxnLog txn = new FileTxnLog(logDir);
+            FileTxnLog txn = new FileTxnLog(logDir, config);
             itr = txn.read(maxLog);
             while (true) {
                 if(!itr.next())

@@ -31,7 +31,7 @@ import org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException;
  * We use this instead of Properties as it's typed.
  *
  */
-public class ServerConfig {
+public class ServerConfig  implements ZooKeeperConfig{
     ////
     //// If you update the configuration parameters be sure
     //// to update the "conf" 4letter word
@@ -46,6 +46,7 @@ public class ServerConfig {
     protected int minSessionTimeout = -1;
     /** defaults to -1 if not set explicitly */
     protected int maxSessionTimeout = -1;
+    protected long fsyncWarningThresholdMS = 1000;
 
     /**
      * Parse arguments for server configuration
@@ -98,6 +99,7 @@ public class ServerConfig {
         maxClientCnxns = config.getMaxClientCnxns();
         minSessionTimeout = config.getMinSessionTimeout();
         maxSessionTimeout = config.getMaxSessionTimeout();
+        fsyncWarningThresholdMS = config.getFsyncWarningThreshold();
     }
 
     public InetSocketAddress getClientPortAddress() {
@@ -114,4 +116,5 @@ public class ServerConfig {
     public int getMinSessionTimeout() { return minSessionTimeout; }
     /** maximum session timeout in milliseconds, -1 if unset */
     public int getMaxSessionTimeout() { return maxSessionTimeout; }
+    public long getFsyncWarningThreshold() { return fsyncWarningThresholdMS; }
 }

@@ -33,6 +33,7 @@ import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.InputArchive;
 import org.apache.zookeeper.data.StatPersisted;
 import org.apache.zookeeper.server.persistence.FileSnap;
+import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 
 /**
  * Dump a snapshot file to stdout.
@@ -57,7 +58,7 @@ public class SnapshotFormatter {
                 new Adler32());
         InputArchive ia = BinaryInputArchive.getArchive(is);
         
-        FileSnap fileSnap = new FileSnap(null);
+        FileSnap fileSnap = new FileSnap(null, new QuorumPeerConfig());
 
         DataTree dataTree = new DataTree();
         Map<Long, Integer> sessions = new HashMap<Long, Integer>();

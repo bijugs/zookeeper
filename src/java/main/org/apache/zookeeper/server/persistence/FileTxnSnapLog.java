@@ -33,6 +33,7 @@ import org.apache.zookeeper.server.DataTree.ProcessTxnResult;
 import org.apache.zookeeper.server.Request;
 import org.apache.zookeeper.server.ZooTrace;
 import org.apache.zookeeper.server.persistence.TxnLog.TxnIterator;
+import org.apache.zookeeper.server.ZooKeeperConfig;
 import org.apache.zookeeper.txn.CreateSessionTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ public class FileTxnSnapLog {
     private SnapShot snapLog;
     public final static int VERSION = 2;
     public final static String version = "version-";
+    private ZooKeeperConfig config;
 
     private static final Logger LOG = LoggerFactory.getLogger(FileTxnSnapLog.class);
 
@@ -80,12 +82,12 @@ public class FileTxnSnapLog {
      * @param dataDir the trasaction directory
      * @param snapDir the snapshot directory
      */
-    public FileTxnSnapLog(File dataDir, File snapDir) throws IOException {
+    public FileTxnSnapLog(File dataDir, File snapDir, ZooKeeperConfig config) throws IOException {
         LOG.debug("Opening datadir:{} snapDir:{}", dataDir, snapDir);
 
         this.dataDir = new File(dataDir, version + VERSION);
         this.snapDir = new File(snapDir, version + VERSION);
-
+        this.config = config;
         // by default create snap/log dirs, but otherwise complain instead
         // See ZOOKEEPER-1161 for more details
         boolean enableAutocreate = Boolean.valueOf(
@@ -122,8 +124,8 @@ public class FileTxnSnapLog {
                         + this.snapDir);
             }
         }
-        txnLog = new FileTxnLog(this.dataDir);
-        snapLog = new FileSnap(this.snapDir);
+        txnLog = new FileTxnLog(this.dataDir, config);
+        snapLog = new FileSnap(this.snapDir, config);
     }
 
     /**
@@ -158,7 +160,7 @@ public class FileTxnSnapLog {
     public long restore(DataTree dt, Map<Long, Integer> sessions,
             PlayBackListener listener) throws IOException {
         snapLog.deserialize(dt, sessions);
-        FileTxnLog txnLog = new FileTxnLog(dataDir);
+        FileTxnLog txnLog = new FileTxnLog(dataDir, config);
         TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
         long highestZxid = dt.lastProcessedZxid;
         TxnHeader hdr;
@@ -219,7 +221,7 @@ public class FileTxnSnapLog {
      */
     public TxnIterator readTxnLog(long zxid, boolean fastForward)
             throws IOException {
-        FileTxnLog txnLog = new FileTxnLog(dataDir);
+        FileTxnLog txnLog = new FileTxnLog(dataDir, config);
         return txnLog.read(zxid, fastForward);
     }
     
@@ -279,7 +281,7 @@ public class FileTxnSnapLog {
      * @return the last logged zxid
      */
     public long getLastLoggedZxid() {
-        FileTxnLog txnLog = new FileTxnLog(dataDir);
+        FileTxnLog txnLog = new FileTxnLog(dataDir, config);
         return txnLog.getLastLoggedZxid();
     }
 
@@ -313,7 +315,7 @@ public class FileTxnSnapLog {
         close();
 
         // truncate it
-        FileTxnLog truncLog = new FileTxnLog(dataDir);
+        FileTxnLog truncLog = new FileTxnLog(dataDir, config);
         boolean truncated = truncLog.truncate(zxid);
         truncLog.close();
 
@@ -321,8 +323,8 @@ public class FileTxnSnapLog {
         // I'd rather just close/reopen this object itself, however that 
         // would have a big impact outside ZKDatabase as there are other
         // objects holding a reference to this object.
-        txnLog = new FileTxnLog(dataDir);
-        snapLog = new FileSnap(snapDir);
+        txnLog = new FileTxnLog(dataDir, config);
+        snapLog = new FileSnap(snapDir, config);
 
         return truncated;
     }
@@ -335,7 +337,7 @@ public class FileTxnSnapLog {
      * @throws IOException
      */
     public File findMostRecentSnapshot() throws IOException {
-        FileSnap snaplog = new FileSnap(snapDir);
+        FileSnap snaplog = new FileSnap(snapDir, config);
         return snaplog.findMostRecentSnapshot();
     }
 
@@ -347,7 +349,7 @@ public class FileTxnSnapLog {
      * @throws IOException
      */
     public List<File> findNRecentSnapshots(int n) throws IOException {
-        FileSnap snaplog = new FileSnap(snapDir);
+        FileSnap snaplog = new FileSnap(snapDir, config);
         return snaplog.findNRecentSnapshots(n);
     }
 
