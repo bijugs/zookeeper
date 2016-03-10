@@ -438,6 +438,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     }
 
     public synchronized void startup() {
+        registerShutDownHook();
         if (sessionTracker == null) {
             createSessionTracker();
         }
@@ -462,7 +463,17 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public ZooKeeperServerListener getZooKeeperServerListener() {
         return listener;
     }
-
+    
+    private void registerShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run() {
+                LOG.info("SIGTERM received: Starting ZooKeeper server shutdown process");
+                shutdown();
+                LOG.info("SIGTERM received: ZooKeeper server shutdown process complete");
+            }
+        });
+        LOG.info("Shutdown hook registered");
+    }
     /**
      * Default listener implementation, which will do a graceful shutdown on
      * notification

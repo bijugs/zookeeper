@@ -115,6 +115,10 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements
                     }
                 }
                 if (si == requestOfDeath) {
+                    if (snapInProcess != null && snapInProcess.isAlive()) {
+               		LOG.info("SyncRequestProcessor: Will wait for snapshot to complete");
+               		Thread.sleep(1000);
+                    }
                     break;
                 }
                 if (si != null) {

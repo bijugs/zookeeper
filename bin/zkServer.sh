@@ -210,6 +210,11 @@ stop)
       echo "no zookeeper to stop (could not find file $ZOOPIDFILE)"
     else
       $KILL $(cat "$ZOOPIDFILE")
+      sleep 2
+      if $KILLl -0 $(cat "$ZOOPIDFILE") > /dev/null 2>&1; then
+        echo "Force stopping the process"
+        $KILL -9 $(cat "$ZOOPIDFILE")
+      fi
       rm "$ZOOPIDFILE"
       echo STOPPED
     fi

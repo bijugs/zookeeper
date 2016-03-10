@@ -745,7 +745,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
     public synchronized void start() {
         if (!getView().containsKey(myid)) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
-         }
+        }
+        registerShutDownHook();
         loadDataBase();
         startServerCnxnFactory();
         try {
@@ -1174,6 +1175,17 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
        reconfigFlag = false;   
     }
     
+    private void registerShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run() {
+                LOG.info("SIGTERM received: Starting QuorumPeer shutdown process");
+                shutdown();
+                LOG.info("SIGTERM received: QuorumPeer shutdown process complete");
+            }
+        });
+        LOG.info("Shutdown hook registered");
+    }
+
     public void shutdown() {
         running = false;
         if (leader != null) {
